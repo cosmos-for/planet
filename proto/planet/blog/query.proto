@@ -8,6 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "planet/blog/params.proto";
 import "planet/blog/post.proto";
 import "planet/blog/sent_post.proto";
+import "planet/blog/timeout_post.proto";
 
 option go_package = "planet/x/blog/types";
 
@@ -37,6 +38,16 @@ service Query {
   }
   rpc SentPostAll (QueryAllSentPostRequest) returns (QueryAllSentPostResponse) {
     option (google.api.http).get = "/planet/blog/sent_post";
+  
+  }
+  
+  // Queries a list of TimeoutPost items.
+  rpc TimeoutPost    (QueryGetTimeoutPostRequest) returns (QueryGetTimeoutPostResponse) {
+    option (google.api.http).get = "/planet/blog/timeout_post/{id}";
+  
+  }
+  rpc TimeoutPostAll (QueryAllTimeoutPostRequest) returns (QueryAllTimeoutPostResponse) {
+    option (google.api.http).get = "/planet/blog/timeout_post";
   
   }
 }
@@ -82,5 +93,22 @@ message QueryAllSentPostRequest {
 message QueryAllSentPostResponse {
   repeated SentPost                               SentPost   = 1 [(gogoproto.nullable) = false];
            cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetTimeoutPostRequest {
+  uint64 id = 1;
+}
+
+message QueryGetTimeoutPostResponse {
+  TimeoutPost TimeoutPost = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllTimeoutPostRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTimeoutPostResponse {
+  repeated TimeoutPost                            TimeoutPost = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination  = 2;
 }
 

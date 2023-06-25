@@ -27,7 +27,7 @@ ignite scaffold list sentPost postID title chain creator --no-message --module b
 **5.** 添加发送超时博文（timeoutPost）的增删改查。
 
 ```
-ignite scaffold list timedoutPost title chain creator --no-message --module blog
+ignite scaffold list timeoutPost title chain creator --no-message --module blog
 ```
 
 **6.** 添加IBC发送数据包和确认数据包的结构。
@@ -75,9 +75,9 @@ k.AppendSentPost(
 **10.** 修改keeper方法中的`OnTimeoutIbcPostPacket `。
 
 ```
-k.AppendTimedoutPost(
+k.AppendtimeoutPost(
         ctx,
-        types.TimedoutPost{
+        types.timeoutPost{
             Creator: data.Creator,
             Title:   data.Title,
             Chain:   packet.DestinationPort + "-" + packet.DestinationChannel,
