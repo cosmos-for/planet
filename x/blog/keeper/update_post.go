@@ -2,21 +2,19 @@ package keeper
 
 import (
 	"errors"
-	"strconv"
-
-	"planet/x/blog/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	"planet/x/blog/types"
 )
 
-// TransmitIbcPostPacket transmits the packet over IBC with the specified source port and source channel
-func (k Keeper) TransmitIbcPostPacket(
+// TransmitUpdatePostPacket transmits the packet over IBC with the specified source port and source channel
+func (k Keeper) TransmitUpdatePostPacket(
 	ctx sdk.Context,
-	packetData types.IbcPostPacketData,
+	packetData types.UpdatePostPacketData,
 	sourcePort,
 	sourceChannel string,
 	timeoutHeight clienttypes.Height,
@@ -35,31 +33,21 @@ func (k Keeper) TransmitIbcPostPacket(
 	return k.channelKeeper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, packetBytes)
 }
 
-// OnRecvIbcPostPacket processes packet reception
-func (k Keeper) OnRecvIbcPostPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IbcPostPacketData) (packetAck types.IbcPostPacketAck, err error) {
+// OnRecvUpdatePostPacket processes packet reception
+func (k Keeper) OnRecvUpdatePostPacket(ctx sdk.Context, packet channeltypes.Packet, data types.UpdatePostPacketData) (packetAck types.UpdatePostPacketAck, err error) {
 	// validate packet data upon receiving
 	if err := data.ValidateBasic(); err != nil {
 		return packetAck, err
 	}
 
-	// TODO: packet reception logic // Done
-	id := k.AppendPost(
-		ctx,
-		types.Post{
-			Creator: packet.SourcePort + "-" + packet.SourceChannel + "-" + data.Creator,
-			Title:   data.Title,
-			Content: data.Content,
-		},
-	)
-
-	packetAck.PostID = strconv.FormatUint(id, 10)
+	// TODO: packet reception logic
 
 	return packetAck, nil
 }
 
-// OnAcknowledgementIbcPostPacket responds to the the success or failure of a packet
+// OnAcknowledgementUpdatePostPacket responds to the the success or failure of a packet
 // acknowledgement written on the receiving chain.
-func (k Keeper) OnAcknowledgementIbcPostPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IbcPostPacketData, ack channeltypes.Acknowledgement) error {
+func (k Keeper) OnAcknowledgementUpdatePostPacket(ctx sdk.Context, packet channeltypes.Packet, data types.UpdatePostPacketData, ack channeltypes.Acknowledgement) error {
 	switch dispatchedAck := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 
@@ -69,23 +57,14 @@ func (k Keeper) OnAcknowledgementIbcPostPacket(ctx sdk.Context, packet channelty
 		return nil
 	case *channeltypes.Acknowledgement_Result:
 		// Decode the packet acknowledgment
-		var packetAck types.IbcPostPacketAck
+		var packetAck types.UpdatePostPacketAck
 
 		if err := types.ModuleCdc.UnmarshalJSON(dispatchedAck.Result, &packetAck); err != nil {
 			// The counter-party module doesn't implement the correct acknowledgment format
 			return errors.New("cannot unmarshal acknowledgment")
 		}
 
-		// TODO: successful acknowledgement logic	// Done
-		k.AppendSentPost(
-			ctx,
-			types.SentPost{
-				Creator: data.Creator,
-				PostID:  packetAck.PostID,
-				Title:   data.Title,
-				Chain:   packet.DestinationPort + "-" + packet.DestinationChannel,
-			},
-		)
+		// TODO: successful acknowledgement logic
 
 		return nil
 	default:
@@ -94,18 +73,10 @@ func (k Keeper) OnAcknowledgementIbcPostPacket(ctx sdk.Context, packet channelty
 	}
 }
 
-// OnTimeoutIbcPostPacket responds to the case where a packet has not been transmitted because of a timeout
-func (k Keeper) OnTimeoutIbcPostPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IbcPostPacketData) error {
+// OnTimeoutUpdatePostPacket responds to the case where a packet has not been transmitted because of a timeout
+func (k Keeper) OnTimeoutUpdatePostPacket(ctx sdk.Context, packet channeltypes.Packet, data types.UpdatePostPacketData) error {
 
-	// TODO: packet timeout logic	// Done
-	k.AppendTimeoutPost(
-		ctx,
-		types.TimeoutPost{
-			Creator: data.Creator,
-			Title:   data.Title,
-			Chain:   packet.DestinationPort + "-" + packet.DestinationChannel,
-		},
-	)
+	// TODO: packet timeout logic
 
 	return nil
 }

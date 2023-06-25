@@ -8,20 +8,20 @@ import (
 	"planet/x/blog/types"
 )
 
-func (k msgServer) SendIbcPost(goCtx context.Context, msg *types.MsgSendIbcPost) (*types.MsgSendIbcPostResponse, error) {
+func (k msgServer) SendUpdatePost(goCtx context.Context, msg *types.MsgSendUpdatePost) (*types.MsgSendUpdatePostResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// TODO: logic before transmitting the packet
 
 	// Construct the packet
-	var packet types.IbcPostPacketData
+	var packet types.UpdatePostPacketData
 
+	packet.PostID = msg.PostID
 	packet.Title = msg.Title
 	packet.Content = msg.Content
-	packet.Creator = msg.Creator // Add Creator Done
 
 	// Transmit the packet
-	_, err := k.TransmitIbcPostPacket(
+	_, err := k.TransmitUpdatePostPacket(
 		ctx,
 		packet,
 		msg.Port,
@@ -33,5 +33,5 @@ func (k msgServer) SendIbcPost(goCtx context.Context, msg *types.MsgSendIbcPost)
 		return nil, err
 	}
 
-	return &types.MsgSendIbcPostResponse{}, nil
+	return &types.MsgSendUpdatePostResponse{}, nil
 }
