@@ -2,13 +2,15 @@ package keeper
 
 import (
 	"errors"
+	"strconv"
+
+	"planet/x/blog/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
-	"planet/x/blog/types"
 )
 
 // TransmitUpdatePostPacket transmits the packet over IBC with the specified source port and source channel
@@ -40,7 +42,30 @@ func (k Keeper) OnRecvUpdatePostPacket(ctx sdk.Context, packet channeltypes.Pack
 		return packetAck, err
 	}
 
-	// TODO: packet reception logic
+	// TODO: packet reception logic // Done
+	postID, perr := strconv.ParseUint(data.PostID, 10, 64);
+
+	if perr != nil {
+		packetAck.IsSuccess = false;
+		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot parse postID: %w", perr)
+	}
+
+	post, is_find := k.GetPost(ctx, postID);
+
+	if !is_find {
+		packetAck.IsSuccess = false;
+		return packetAck, errors.New("cannot find the specified post")
+	}
+
+	post.Content = data.Content;
+	post.Title = data.Title;
+
+	k.SetPost(
+		ctx,
+		post,
+	)
+
+	packetAck.IsSuccess = true
 
 	return packetAck, nil
 }
@@ -65,6 +90,25 @@ func (k Keeper) OnAcknowledgementUpdatePostPacket(ctx sdk.Context, packet channe
 		}
 
 		// TODO: successful acknowledgement logic
+		// Find the post by postID
+		postID, perr := strconv.ParseUint(data.PostID, 10, 64);
+
+		if perr != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot parse postID: %w", perr)
+		}
+
+		post, is_find := k.GetPost(ctx, postID);
+
+		if !is_find {
+			packetAck.IsSuccess = false
+			return errors.New("cannot find the specified post")
+		}
+
+		// update current post
+		post.Title = data.Title;
+		post.Content = data.Content;
+		// Save updated post
+		k.SetPost(ctx, post);
 
 		return nil
 	default:
