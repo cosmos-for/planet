@@ -54,7 +54,7 @@ func (k Keeper) OnRecvUpdatePostPacket(ctx sdk.Context, packet channeltypes.Pack
 
 	if !is_find {
 		packetAck.IsSuccess = false;
-		return packetAck, errors.New("cannot find the specified post")
+		return packetAck, nil
 	}
 
 	post.Content = data.Content;
@@ -89,26 +89,25 @@ func (k Keeper) OnAcknowledgementUpdatePostPacket(ctx sdk.Context, packet channe
 			return errors.New("cannot unmarshal acknowledgment")
 		}
 
-		// TODO: successful acknowledgement logic
+		// TODO: successful acknowledgement logic 	// Done
 		// Find the post by postID
 		postID, perr := strconv.ParseUint(data.PostID, 10, 64);
 
 		if perr != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot parse postID: %w", perr)
+			return nil
 		}
 
-		post, is_find := k.GetPost(ctx, postID);
+		if packetAck.IsSuccess {
+			sentPost, is_find := k.GetSentPost(ctx, postID);
 
-		if !is_find {
-			packetAck.IsSuccess = false
-			return errors.New("cannot find the specified post")
+			if !is_find {
+				return nil
+			}
+			
+			// update SentPost and save
+			sentPost.Title = data.Title;
+			k.SetSentPost(ctx, sentPost);
 		}
-
-		// update current post
-		post.Title = data.Title;
-		post.Content = data.Content;
-		// Save updated post
-		k.SetPost(ctx, post);
 
 		return nil
 	default:
